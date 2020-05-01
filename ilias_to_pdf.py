@@ -6,20 +6,21 @@ Module Docstring
 __version__ = "0.1.0"
 __license__ = "GPL3"
 
+import io
 import os
-import sys
-import re
+import yaml
 import shutil
+import sys
 
 from PIL import Image
-from PyPDF2 import PdfFileMerger
-
+from PyPDF2 import PdfFileMerger, PdfFileReader
 
 ########################################################################################################################
 # File handlers
 ########################################################################################################################
 
 pdfs_by_dirname = {}
+
 
 def zip_handler(dirpath, filename, abspath):
     print(f"\tUnzipping {abspath} to {dirpath}")
@@ -62,8 +63,6 @@ def walk_files(path, ignore_files):
     handled_files = []
 
     for dirpath, dirnames, filenames in os.walk(path):
-        # use os.walk to iterate someDir's contents recursively. No
-        # need to implement recursion yourself if stdlib does it for you
         for filename in filenames:
             abspath = os.path.join(dirpath, filename)
 
@@ -89,6 +88,8 @@ def walk_files(path, ignore_files):
 
 
 def concat_pdfs(pdfs_by_dirname):
+    page_nums = {}
+
     for dir in pdfs_by_dirname:
         print(f"Entering {dir}")
         contents = pdfs_by_dirname[dir]
@@ -100,15 +101,20 @@ def concat_pdfs(pdfs_by_dirname):
             merger.append(pdf)
 
         name = os.path.normpath(dir).split(os.sep)[2]
+        page_num = len(merger.pages)
+        page_nums[name] = page_num
         new_pdf = os.path.join("gen", name + ".pdf")
-        print(f"\t-> {new_pdf}")
+        print(f"\t-> {new_pdf} ({page_num} pages)")
+
         merger.write(new_pdf)
-        merger.close()
+
+    print("saving page counts...")
+    with open(os.path.join("gen", "page_counts.yaml"), "w") as f:
+        f.write(yaml.dump(page_nums))
 
 
 
 def main(args):
-    """ Main entry point of the app """
     if not args or len(args) == 1:
         print_usage()
         exit()
@@ -129,5 +135,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    """ This is executed when run from the command line """
     main(sys.argv)
