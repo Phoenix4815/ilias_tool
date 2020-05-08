@@ -18,6 +18,7 @@ import sys
 from PIL import Image
 from PyPDF2 import PdfFileMerger, PdfFileReader, PdfFileWriter
 from reportlab.lib import colors
+from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 
@@ -36,7 +37,6 @@ watermark_colors = [
     colors.tomato,
     colors.crimson
 ]
-
 
 ########################################################################################################################
 # File handlers
@@ -90,7 +90,7 @@ def walk_files(path, ignore_files):
             abspath = os.path.join(dirpath, filename)
 
             if abspath in ignore_files:
-                #print(f"Ignoring {abspath}")
+                # print(f"Ignoring {abspath}")
                 continue
 
             handled_files.append(abspath)
@@ -104,7 +104,7 @@ def walk_files(path, ignore_files):
                 print(f"No handler for {ext}! Skipping...")
                 pass
             else:
-                #with open(abspath) as f:
+                # with open(abspath) as f:
                 function(dirpath, filename, abspath)
 
     return handled_files
@@ -117,9 +117,9 @@ def watermark_str_to_pdf(text, color):
     # Create textobject
     textobject = can.beginText()
     # Set text location (x, y)
-    textobject.setTextOrigin(10, 5)
+    textobject.setTextOrigin(.5 * cm, .2 * cm)
     # Set font face and size
-    textobject.setFont('Helvetica', 12)
+    textobject.setFont('Helvetica', 10)
     # Change text color
     textobject.setFillColor(color)
     # Write red text
@@ -128,7 +128,7 @@ def watermark_str_to_pdf(text, color):
     can.drawText(textobject)
 
     can.save()
-    #packet.seek(0)
+    # packet.seek(0)
     return PdfFileReader(packet).getPage(0)
 
 
@@ -139,7 +139,17 @@ def watermark(pdf, text, color=colors.red):
     # Watermark all the pages
     for page in range(pdf.getNumPages()):
         page = pdf.getPage(page)
-        page.mergePage(mark)
+
+        rotation_in_deg = page.get('/Rotate')
+        if not rotation_in_deg:
+            rotation_in_deg = 0
+        page.mergeRotatedTranslatedPage(mark,
+                                        tx=mark.mediaBox.getWidth() / 2,
+                                        ty=mark.mediaBox.getHeight() / 2,
+                                        rotation=rotation_in_deg,
+                                        expand=True)
+        #       page.mergePage(mark)
+
         writer.addPage(page)
 
     buffer = BytesIO()
@@ -172,7 +182,6 @@ def concat_pdfs(pdfs_by_dirname):
     print("saving page counts...")
     with open(os.path.join("gen", "page_counts.yaml"), "w") as f:
         f.write(yaml.dump(page_nums))
-
 
 
 def main(args):
