@@ -117,7 +117,7 @@ def watermark_str_to_pdf(text, color):
     # Create textobject
     textobject = can.beginText()
     # Set text location (x, y)
-    textobject.setTextOrigin(10, 30)
+    textobject.setTextOrigin(10, 5)
     # Set font face and size
     textobject.setFont('Helvetica', 12)
     # Change text color
