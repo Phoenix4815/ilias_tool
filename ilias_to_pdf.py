@@ -8,12 +8,35 @@ __license__ = "GPL3"
 
 import io
 import os
+from io import BytesIO
+from random import random, Random
+
 import yaml
 import shutil
 import sys
 
 from PIL import Image
-from PyPDF2 import PdfFileMerger, PdfFileReader
+from PyPDF2 import PdfFileMerger, PdfFileReader, PdfFileWriter
+from reportlab.lib import colors
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+
+watermark_colors = [
+    colors.red,
+    colors.green,
+    colors.chocolate,
+    colors.orange,
+    colors.aquamarine,
+    colors.azure,
+    colors.violet,
+    colors.darkgoldenrod,
+    colors.coral,
+    colors.magenta,
+    colors.tomato,
+    colors.crimson
+]
+
 
 ########################################################################################################################
 # File handlers
@@ -87,6 +110,43 @@ def walk_files(path, ignore_files):
     return handled_files
 
 
+def watermark_str_to_pdf(text, color):
+    packet = BytesIO()
+    can = canvas.Canvas(packet, pagesize=A4)
+
+    # Create textobject
+    textobject = can.beginText()
+    # Set text location (x, y)
+    textobject.setTextOrigin(10, 30)
+    # Set font face and size
+    textobject.setFont('Helvetica', 12)
+    # Change text color
+    textobject.setFillColor(color)
+    # Write red text
+    textobject.textLine(text=text)
+    # Write text to the canvas
+    can.drawText(textobject)
+
+    can.save()
+    #packet.seek(0)
+    return PdfFileReader(packet).getPage(0)
+
+
+def watermark(pdf, text, color=colors.red):
+    writer = PdfFileWriter()
+    mark = watermark_str_to_pdf(text, color)
+
+    # Watermark all the pages
+    for page in range(pdf.getNumPages()):
+        page = pdf.getPage(page)
+        page.mergePage(mark)
+        writer.addPage(page)
+
+    buffer = BytesIO()
+    writer.write(buffer)
+    return buffer
+
+
 def concat_pdfs(pdfs_by_dirname):
     page_nums = {}
 
@@ -95,12 +155,13 @@ def concat_pdfs(pdfs_by_dirname):
         contents = pdfs_by_dirname[dir]
         contents.sort()
 
+        name = os.path.normpath(dir).split(os.sep)[2]
+        color = Random().choice(watermark_colors)
         merger = PdfFileMerger(strict=False)
         for pdf in contents:
             print(f"\t{pdf}")
-            merger.append(pdf)
+            merger.append(watermark(PdfFileReader(pdf, strict=False), name, color))
 
-        name = os.path.normpath(dir).split(os.sep)[2]
         page_num = len(merger.pages)
         page_nums[name] = page_num
         new_pdf = os.path.join("gen", name + ".pdf")

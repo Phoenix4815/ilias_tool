@@ -7,6 +7,7 @@ name = "pypi"
 pyyaml = "*"
 Pillow = "*"
 PyPdf2 = "*"
+reportlab = "*"
 
 [dev-packages]
 
