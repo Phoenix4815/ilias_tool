@@ -22,20 +22,18 @@ from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 
-
 watermark_colors = [
     colors.red,
-    colors.green,
-    colors.chocolate,
+    colors.darkgreen,
+    # colors.chocolate,
     colors.orange,
     colors.aquamarine,
-    colors.azure,
-    colors.violet,
+    colors.darkviolet,
     colors.darkgoldenrod,
-    colors.coral,
+    # colors.coral,
     colors.magenta,
-    colors.tomato,
-    colors.crimson
+    # colors.tomato,
+    # colors.crimson
 ]
 
 ########################################################################################################################
