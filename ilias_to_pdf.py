@@ -155,6 +155,10 @@ def watermark(pdf, text, color=colors.red):
     return buffer
 
 
+def mysorted(dict):
+    return sorted(sorted(dict), key=lambda x: str.lower(x[0]))
+
+
 def concat_pdfs(pdfs_by_dirname):
     page_nums = {}
 
@@ -180,7 +184,7 @@ def concat_pdfs(pdfs_by_dirname):
 
     print("saving page counts...")
     with open(os.path.join("gen", "page_counts.yaml"), "w") as f:
-        f.write(yaml.dump(page_nums))
+        f.write(yaml.dump(dict(mysorted(page_nums.items())), sort_keys=False))
 
 
 def main(args):
