@@ -163,7 +163,8 @@ def concat_pdfs(pdfs_by_dirname):
         contents = pdfs_by_dirname[dir]
         contents.sort()
 
-        name = os.path.normpath(dir).split(os.sep)[2]
+        #TODO: Handle parsing with subdirectories correctly
+        name = os.path.normpath(dir).split(os.sep)[-1]
         color = Random().choice(watermark_colors)
         merger = PdfFileMerger(strict=False)
         for pdf in contents:
